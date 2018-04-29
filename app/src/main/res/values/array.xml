@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    * Author: Naoyuki Kanezawa
+    * Date: 2016
+    * Availability: https://github.com/nkzawa/socket.io-android-chat/tree/master/app/src/main/res/values/array.xml
+-->
+<resources>
+
+    <array name="username_colors">
+        <item>@color/user1</item>
+        <item>@color/user2</item>
+    </array>
+
+</resources>

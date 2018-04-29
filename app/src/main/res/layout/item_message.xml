@@ -1,0 +1,32 @@
+<!--
+    * Author: Naoyuki Kanezawa
+    * Date: 2016
+    * Availability: https://github.com/nkzawa/socket.io-android-chat/tree/master/app/src/main/res/layout/item_message.xml
+-->
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="8dp">
+
+    <TextView
+        android:id="@+id/username"
+        style="?android:textAppearanceSmall"
+        android:textColor="?android:textColorPrimary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textStyle="bold"/>
+    <TextView
+        android:id="@+id/message"
+        style="?android:textAppearanceMedium"
+        android:textColor="?android:textColorPrimary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/username"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:background="@drawable/text_box"/>
+
+</RelativeLayout>
