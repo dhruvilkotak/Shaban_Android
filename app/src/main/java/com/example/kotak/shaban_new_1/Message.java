@@ -17,6 +17,15 @@ public class Message implements Serializable {
     private String updatedAt;
     private Author author;
     private Group group;
+    private String messageStatus="";
+
+    public String getMessageStatus() {
+        return messageStatus;
+    }
+
+    public void setMessageStatus(String messageStatus) {
+        this.messageStatus = messageStatus;
+    }
 
     public Group getGroup() {
         return group;

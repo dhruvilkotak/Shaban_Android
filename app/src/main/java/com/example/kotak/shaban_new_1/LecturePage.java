@@ -322,7 +322,7 @@ public class LecturePage extends AppCompatActivity {
 
         // Setting Dialog Message
         alertDialog.setMessage(message);
-
+        alertDialog.setCancelable(false);
         // Setting alert dialog icon
         alertDialog.setIcon(R.drawable.ic_not_interested_black_24dp);
 

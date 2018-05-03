@@ -31,6 +31,15 @@ public class MessageListAdapter extends RecyclerView.Adapter {
         mMessageList = messageList;
     }
 
+    public void removeMessage(int position)
+    {
+
+    }
+
+    public Message messageContent(int position)
+    {
+        return mMessageList.get(position);
+    }
     @Override
     public int getItemCount() {
         return mMessageList.size();
@@ -41,7 +50,7 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     public int getItemViewType(int position) {
         try {
             Message message = (Message) mMessageList.get(position);
-            if (message != null || message.getAuthor() != null) {
+            if (message != null && message.getAuthor() != null) {
 
               //  Log.d("name:", message.getContent());
                 if ((message.getAuthor().getFirstName()+" "+message.getAuthor().getLastName()) .equals(userName)) {
@@ -52,6 +61,11 @@ public class MessageListAdapter extends RecyclerView.Adapter {
                     // If some other user sent the message
                     return VIEW_TYPE_MESSAGE_RECEIVED;
                 }
+            }
+            if (message != null &&  !message.getUsername().equals(userName))
+            {
+
+                return  VIEW_TYPE_MESSAGE_RECEIVED;
             }
         }catch (Exception e)
         {
@@ -93,13 +107,14 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     }
 
     private class SentMessageHolder extends RecyclerView.ViewHolder {
-        TextView messageText, timeText;
+        TextView messageText, timeText,messageStatus;
 
         SentMessageHolder(View itemView) {
             super(itemView);
 
             messageText = (TextView) itemView.findViewById(R.id.text_message_body);
             timeText = (TextView) itemView.findViewById(R.id.text_message_time);
+            messageStatus=(TextView) itemView.findViewById(R.id.text_message_status);
         }
 
         void bind(Message message) {
@@ -108,6 +123,7 @@ public class MessageListAdapter extends RecyclerView.Adapter {
             // Format the stored timestamp into a readable String using method.
 
             timeText.setText(DateClass.changeDateFormat(message.getCreatedAt()));
+            messageStatus.setText(message.getMessageStatus());
         }
     }
 
@@ -129,7 +145,10 @@ public class MessageListAdapter extends RecyclerView.Adapter {
             // Format the stored timestamp into a readable String using method.
          //   Log.d("receiveTime:",message.getCreatedAt());
             timeText.setText(DateClass.changeDateFormat(message.getCreatedAt()));
-            nameText.setText(message.getAuthor().getFirstName()+" "+message.getAuthor().getLastName());
+            if(message.getAuthor()!=null)
+                nameText.setText(message.getAuthor().getFirstName()+" "+message.getAuthor().getLastName());
+            else if (message.getUsername()!=null)
+                nameText.setText(message.getUsername());
         }
     }
 }

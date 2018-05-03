@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -57,6 +59,7 @@ public class ChatActivity extends AppCompatActivity {
     private Button chatSendButton;
     private EditText inputMessageView;
     private ArrayList<Message> messages = new ArrayList<Message>();
+    private ArrayList<Message> messages1 = new ArrayList<Message>();
    // private RecyclerView.Adapter messageAdapter;
     private String nameOfUser;
     private SailsIOClient socket;
@@ -68,6 +71,7 @@ public class ChatActivity extends AppCompatActivity {
     String firstname;
     android.os.Handler customHandler;
     private Timer myTimer;
+    int flag=1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,7 +93,7 @@ public class ChatActivity extends AppCompatActivity {
             editor.putString("lectureTitle", lecture.getLectureDescription());
             toolbar.setTitle(" Chat : "+lecture.getLectureDescription());
             lectureId=lecture.getLectureId();
-            //commits your edits
+            //comm  its your edits
 
         }
         else
@@ -114,16 +118,39 @@ public class ChatActivity extends AppCompatActivity {
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
+        int msgFileCount=0;
+        try {
+            readMessagesFromFile("lecture"+lectureId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if(!isConnected)
-        {
+        {/*
             showAlertDialog(ChatActivity.this, "No Internet Connection",
                     "You don't have internet connection.", false);
-
+*/
+            try {
+                flag=1;
+          //      readMessagesFromFile("lecture" + lecture.getLectureId());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         else
         {
+            flag=0;
             try {
                 new GetAllMessages().execute().get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+            }
+
+        }
+        socket = new SailsIOClient("https://shaban.rit.albany.edu", lecture.getLectureId());
+        socket.socket.on("message", onNewMessage);
+
+
                 mMessageAdapter = new MessageListAdapter(this, messages, nameOfUser);
 
                 mMessageRecycler = (RecyclerView) findViewById(R.id.reyclerview_message_list);
@@ -136,7 +163,7 @@ public class ChatActivity extends AppCompatActivity {
                 scrollToBottom();
 
            customHandler = new android.os.Handler();
-           customHandler.postDelayed(updateTimerThread, 10000);
+           customHandler.postDelayed(updateTimerThread, 15000);
 
            chatSendButton=(Button)findViewById(R.id.button_chatbox_send);
             chatSendButton.setOnClickListener(new View.OnClickListener()
@@ -145,8 +172,8 @@ public class ChatActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     try {
+                        Log.d("enter","send");
                         attemptSend();
-                        //relodeMessages();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -158,8 +185,8 @@ public class ChatActivity extends AppCompatActivity {
                 public boolean onEditorAction(TextView v, int id, KeyEvent event) {
                     if (id == R.id.button_chatbox_send || id == EditorInfo.IME_NULL) {
                         try {
+                            Log.d("enter","ere");
                             attemptSend();
-                          //  relodeMessages();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -184,15 +211,11 @@ public class ChatActivity extends AppCompatActivity {
                 public void afterTextChanged(Editable s) {
                 }
             });
+/*
             socket = new SailsIOClient("https://shaban.rit.albany.edu", lecture.getLectureId());
             socket.socket.on("message", onNewMessage);
+*/
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-         }
-
-        }
     }
 
 
@@ -202,28 +225,81 @@ public class ChatActivity extends AppCompatActivity {
         public void run()
         {
          try {
-             new GetAllMessages().execute().get();
+             ConnectivityManager cm =
+                     (ConnectivityManager)ChatActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
+             NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+             boolean isConnected = activeNetwork != null &&
+                     activeNetwork.isConnectedOrConnecting();
+             if(isConnected)
+             {
+                 if (flag==1)
+                 {
+                     socket.socket.Disconnect();
+                     socket.socket.off("message", onNewMessage);
+                     socket = new SailsIOClient("https://shaban.rit.albany.edu", lecture.getLectureId());
+                     socket.socket.on("message", onNewMessage);
+                     flag=0;
+
+                 }
+                 int position=messages.size()-messages1.size();
+                 int msgCountFromFile=messages.size();
+                 while(messages1.size()>0)
+                 {
+                     Log.d("msg1:","sending");
+                     attemptSend();
+                     Log.d("posi:",position+"");
+                     Log.d("removing items:",messages.get(position).getContent()+" "+messages1.get(0).getContent()+" "+mMessageAdapter.messageContent(position).getContent());
+                     messages.remove(position);
+                     messages1.remove(0);
+                     mMessageAdapter.notifyItemRemoved(position);
+                     mMessageAdapter.notifyItemRangeChanged(position,messages.size());
+                    scrollToBottom();
+                 }
+                 //ArrayList<Message> tempList=messages;
+                 new GetAllMessages().execute().get();
+                /* int tempflag=0;
+                while (messages.size()<msgCountFromFile)
+                {
+                    tempflag=1;
+                    messages1.add(tempList.get(messages.size()));
+                    attemptSend();
+                    Log.d("posi:",position+"");
+                    Log.d("removing items:",messages.get(position).getContent()+" "+messages1.get(0).getContent()+" "+mMessageAdapter.messageContent(position).getContent());
+                    messages1.remove(0);
+                }
+                if (tempflag==1)
+                {
+                    new GetAllMessages().execute().get();
+                }*/
+                 Log.d("size:","messages:"+messages.size()+" "+"adapter:"+mMessageAdapter.getItemCount());
+
+
+                 if(mMessageAdapter.getItemCount()<messages.size() && messages.size()>0)
+                 {//adding new coming msgs
+                     Log.d("messages","cominng");
+
+                     try {
+
+                         mMessageAdapter.notifyItemInserted(messages.size() - 1);
+                         mMessageAdapter = new MessageListAdapter(ChatActivity.this, messages, nameOfUser);
+                         mMessageRecycler.setAdapter(mMessageAdapter);
+
+                         scrollToBottom();
+                     }catch (Exception e)
+                     {
+
+                     }
+                 }
+
+
+             }
+             else {
+                 flag=1;
+             }
          }catch (Exception e)
          {
 
          }
-           if(mMessageAdapter.getItemCount()!=messages.size() && messages.size()>0)
-            {
-                Log.d("messages","cominng");
-
-                try {
-
-                    mMessageAdapter.notifyItemInserted(messages.size() - 1);
-                    mMessageAdapter = new MessageListAdapter(ChatActivity.this, messages, nameOfUser);
-                    mMessageRecycler.setAdapter(mMessageAdapter);
-
-                    scrollToBottom();
-                }catch (Exception e)
-                {
-
-                }
-            }
-
             //write here whaterver you want to repeat
             customHandler.postDelayed(this, 10000);
         }
@@ -232,23 +308,55 @@ public class ChatActivity extends AppCompatActivity {
 
     private void attemptSend() throws Exception {
         if (null == nameOfUser) return;
-        if (!socket.socket.isConnected()) return;
-
-        final String message = inputMessageView.getText().toString().trim();
+        String message = inputMessageView.getText().toString().trim();
         if (TextUtils.isEmpty(message)) {
             inputMessageView.requestFocus();
-            return;
+            if (messages1.size()>0)
+            {
+                Log.d("msg","msg1");
+                message=messages1.get(0).getContent();
+            }
+            else
+                return;
         }
 
         inputMessageView.setText("");
         addMessage(user.getFirstName()+" "+user.getLastName(), message); // user.getFirtsName
+        Log.d("msgCont",message);
+        ConnectivityManager cm =
+                (ConnectivityManager)ChatActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+
+        if ( !isConnected) {
+
+
+               /* showAlertDialog(ChatActivity.this, "No Internet Connection",
+                        "You don't have internet connection.", false);*//*
+               */
+            Log.d("return","yes");
+            return;
+        }
+        else
+        {
+            if(!socket.socket.isConnected() )
+            {
+                socket = new SailsIOClient("https://shaban.rit.albany.edu", lecture.getLectureId());
+            }
+        }
+
+
         JSONObject jsonObject = emitMessage(message);
         Log.d("sensingmsg:",jsonObject.toString());
         // perform the sending message attempt.
+        Log.d("socket:",socket.toString());
+        final String finalMessage = message;
         socket.socket.post("/messages", jsonObject, new Ack() {
             @Override
             public void call(Object... args) {
-                System.out.println("Message is sent"+message);
+                System.out.println("Message is sent"+ finalMessage);
+             Log.d("mess",messages.size()+"");
             }
         });
     }
@@ -305,9 +413,30 @@ public class ChatActivity extends AppCompatActivity {
 
     private void addMessage(String username, String message) throws JSONException {
         Message newMsg = new Message(username, message);
-        messages.add(newMsg);
+     //   newMsg.setMessageStatus("Sending");
+        ConnectivityManager cm =
+                (ConnectivityManager)ChatActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+        if(!isConnected)
+        {
+            newMsg.setMessageStatus("Sending");
+            messages1.add(newMsg);
+            Log.d("msg1::",newMsg.getContent());
+
+        }
+         messages.add(newMsg);
+
         writeToFile(username, newMsg);
+        /*Log.d("mess:",messages.size()+" inserted");
         mMessageAdapter.notifyItemInserted(messages.size() - 1);
+        Log.d("Adapter:",mMessageAdapter.getItemCount()+" ");
+        scrollToBottom();*/
+
+        mMessageAdapter.notifyItemInserted(messages.size() - 1);
+        mMessageAdapter = new MessageListAdapter(ChatActivity.this, messages, nameOfUser);
+        mMessageRecycler.setAdapter(mMessageAdapter);
         scrollToBottom();
     }
     private void scrollToBottom() {
@@ -326,38 +455,57 @@ public class ChatActivity extends AppCompatActivity {
         JSONObject jsonObject;
         String line;
         Message message;
+        messages=new ArrayList<Message>();
         while ((line = bufferedReader.readLine()) != null) {
+            Log.d("Line",line);
             jsonObject = new JSONObject(line);
             message = new Message((String) jsonObject.get("user"), (String) jsonObject.get("message"));
+            message.setMessageStatus(jsonObject.getString("status"));
+            message.setUpdatedAt(jsonObject.getString("updatedAt"));
+            message.setCreatedAt(jsonObject.getString("createdAt"));
             messages.add(message);
         }
+        Log.d("readsize:",messages.size()+"");
         bufferedReader.close();
     }
 
+    private void removeFile()
+    {
+        String uri = ChatActivity.this.getFilesDir().toString();
+        final File file= new File(uri,"lecture"+lectureId);
+        file.delete();
+    }
 
     private void writeToFile(String username, Message message) throws JSONException {
         JSONObject json = new JSONObject();
-        json.put("user", username);
+        Log.d("userName",username);
+        json.put("user",username);
         json.put("message", message.getContent());
+        json.put("createdAt",message.getCreatedAt());
+        json.put("updatedAt",message.getUpdatedAt());
+        json.put("status",message.getMessageStatus());
+
         String jsonToFile = json.toString();
         String uri = ChatActivity.this.getFilesDir().toString();
         final File file = new File(uri, "lecture" + lectureId);
         try {
             FileOutputStream fileOutputStream;
             OutputStreamWriter outputStreamWriter;
-            fileOutputStream = this.openFileOutput(file.getName(), Context.MODE_PRIVATE);
+          /*fileOutputStream = this.openFileOutput(file.getName(), Context.MODE_PRIVATE);
             outputStreamWriter = new OutputStreamWriter(fileOutputStream);
             outputStreamWriter.write(jsonToFile + '\n');
-//            if(file.exists()) {
-//                fileOutputStream = getContext().openFileOutput(file.getName(), Context.MODE_APPEND);
-//                outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-//                outputStreamWriter.append(jsonToFile + '\n');
-//            }
-//            else {
-//                fileOutputStream = getContext().openFileOutput(file.getName(), Context.MODE_PRIVATE);
-//                outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-//                outputStreamWriter.write(jsonToFile + '\n');
-//            }
+            */
+          if(file.exists()) {
+                Log.d("appen","yes");
+                fileOutputStream = ChatActivity.this.openFileOutput(file.getName(), Context.MODE_APPEND);
+                outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+                outputStreamWriter.append(jsonToFile + '\n');
+            }
+            else {
+                fileOutputStream = ChatActivity.this.openFileOutput(file.getName(), Context.MODE_PRIVATE);
+                outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+                outputStreamWriter.write(jsonToFile + '\n');
+            }
             outputStreamWriter.close();
 
             fileOutputStream.flush();
@@ -398,10 +546,14 @@ public class ChatActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            Log.d("messagessize:",messages.size()+"");
-            messages = JsonReader.ParseJSONMessage(jsonStr, lectureId);
-          //  Log.d("jsonstr",jsonStr);
+            try {
+                readMessagesFromFile("lecture"+lectureId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
+            int msgFileCount=messages.size();
+            messages = JsonReader.ParseJSONMessage(jsonStr, lectureId);
             for(int x = 0; x < messages.size() - 1; x++){
                 int min = x;
                 for(int y = x+1; y < messages.size(); y++){
@@ -414,22 +566,22 @@ public class ChatActivity extends AppCompatActivity {
                 messages.set(x, messages.get(min));
                 messages.set(min, temp);
             }
-            for (int x = messages.size() - 1; x >= 0; x--) {//
-                Message msg = messages.get(x);
-                try {
 
-               //     Log.d("msg:",msg.getContent());
-                    writeToFile(msg.getUsername(), msg);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            if (msgFileCount!=messages.size())
+            {
+                removeFile();
+                for (int x = 0; x <messages.size(); x++) {//
+                    Message msg = messages.get(x);
+                    try {
+
+                             Log.d("UserName:",msg.getUsername());
+                        writeToFile(msg.getUsername(), msg);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
-            /*
-            for (Message m:messages) {
-
-                Log.d("messages:", "" + m.getContent());
-            }*/
             return null;
         }
 
@@ -445,8 +597,22 @@ public class ChatActivity extends AppCompatActivity {
 
     }
 
+/*
+    public void orderingMessages()
+    {
+        for(int x = 0; x < messages.size() - 1; x++){
+            int min = x;
+            for(int y = x+1; y < messages.size(); y++){
+                if(messages.get(y).getId() < messages.get(min).getId()) {
+                    min = y;
+                }
 
-
+            }
+            Message temp = messages.get(x);
+            messages.set(x, messages.get(min));
+            messages.set(min, temp);
+        }
+    }*/
     @Override
     public void onDestroy() {
 
@@ -457,6 +623,60 @@ public class ChatActivity extends AppCompatActivity {
 
 
     }
+
+
+    @Override
+    public void onBackPressed() {
+
+        if (messages1.size()>0) {
+            //super.onBackPressed();
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(ChatActivity.this);
+
+            //AlertDialog alertDialog = new AlertDialog.Builder(context).create();
+
+            // Setting Dialog Title
+            alertDialog.setTitle("Exit Chat Application");
+
+            // Setting Dialog Message
+            alertDialog.setMessage("By Exiting Chat application Sending messages might be discared. Do you want to still Exit or Cancel it ? ");
+            alertDialog.setCancelable(false);
+
+            // Setting alert dialog icon
+            alertDialog.setIcon(R.drawable.ic_exit_to_app_black_24dp);
+
+            alertDialog.setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    int position=messages.size()-messages1.size();
+                    while(messages1.size()>0)
+                    {
+                        messages.remove(position);
+                        messages1.remove(0);
+                        mMessageAdapter.notifyItemRemoved(position);
+                        mMessageAdapter.notifyItemRangeChanged(position,messages.size());
+                        scrollToBottom();
+                    }
+
+                    ChatActivity.super.onBackPressed();
+                }
+            });
+            // Setting OK Button
+            alertDialog.setPositiveButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+
+                }
+            });
+            alertDialog.show();
+        }
+        else
+        {
+            super.onBackPressed();
+        }
+
+    }
+
     public void showAlertDialog(Context context, String title, String message, Boolean status) {
 
         AlertDialog.Builder alertDialog=new AlertDialog.Builder(context);
@@ -465,7 +685,7 @@ public class ChatActivity extends AppCompatActivity {
 
         // Setting Dialog Title
         alertDialog.setTitle(title);
-
+        alertDialog.setCancelable(false);
         // Setting Dialog Message
         alertDialog.setMessage(message);
 

@@ -4,13 +4,16 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -46,6 +49,22 @@ public class WebViewActivity extends AppCompatActivity {
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
+        Intent intent = getIntent();
+        url = (String) intent.getSerializableExtra("url");
+        if(url!=null) {
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            //now get Editor
+            SharedPreferences.Editor editor = sharedPref.edit();
+            //put your value
+            editor.putString("url", url);
+            //commits your edits
+            editor.commit();
+        }
+        else {
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            url = sharedPref.getString("url", "Not Available");
+        }
+
         if(!isConnected)
         {
             showAlertDialog(WebViewActivity.this, "No Internet Connection",
@@ -53,11 +72,9 @@ public class WebViewActivity extends AppCompatActivity {
 
         }
         else {
-            Intent intent = getIntent();
-            url = (String) intent.getSerializableExtra("url");
             web_view = (WebView) findViewById(R.id.web_view);
             web_view.getSettings().setJavaScriptEnabled(true);
-
+            Log.d("url",url);
             web_view.setWebViewClient(new WebViewClient());
             web_view.loadUrl("http://drive.google.com/viewerng/viewer?embedded=true&url=" + "https://shaban.rit.albany.edu/files/" + url);
         }
@@ -67,7 +84,7 @@ public class WebViewActivity extends AppCompatActivity {
         AlertDialog.Builder alertDialog=new AlertDialog.Builder(context);
 
         //AlertDialog alertDialog = new AlertDialog.Builder(context).create();
-
+        alertDialog.setCancelable(false);
         // Setting Dialog Title
         alertDialog.setTitle(title);
 

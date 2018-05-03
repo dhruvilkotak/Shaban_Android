@@ -4,11 +4,13 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -37,6 +39,22 @@ public class VideoPlayerActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Intent intent = getIntent();
+        url = (String) intent.getSerializableExtra("url");
+
+        if(url!=null) {
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            //now get Editor
+            SharedPreferences.Editor editor = sharedPref.edit();
+            //put your value
+            editor.putString("url", url);
+            //commits your edits
+            editor.commit();
+        }
+        else {
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            url = sharedPref.getString("url", "Not Available");
+        }
 
         ConnectivityManager cm =
                 (ConnectivityManager)VideoPlayerActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -50,8 +68,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         }
         else {
-            Intent intent = getIntent();
-            url = (String) intent.getSerializableExtra("url");
             video_view = (VideoView) findViewById(R.id.video_view);
             //video_view.setVideoPath("http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4");
             if (url.contains(".mov")) {
@@ -74,7 +90,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         // Setting Dialog Title
         alertDialog.setTitle(title);
-
+        alertDialog.setCancelable(false);
         // Setting Dialog Message
         alertDialog.setMessage(message);
 

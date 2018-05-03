@@ -142,6 +142,7 @@ public class MainActivity extends AppCompatActivity
 
             // Setting Dialog Message
             alertDialog.setMessage("Do you want to exit application ? ");
+            alertDialog.setCancelable(false);
 
             // Setting alert dialog icon
             alertDialog.setIcon(R.drawable.ic_exit_to_app_black_24dp);
@@ -233,6 +234,7 @@ public class MainActivity extends AppCompatActivity
 
         // Setting Dialog Title
         alertDialog.setTitle(title);
+        alertDialog.setCancelable(false);
 
         // Setting Dialog Message
         alertDialog.setMessage(message);

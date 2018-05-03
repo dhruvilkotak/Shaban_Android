@@ -271,7 +271,7 @@ FrameLayout frameLayout;
         AlertDialog.Builder alertDialog=new AlertDialog.Builder(context);
 
         //AlertDialog alertDialog = new AlertDialog.Builder(context).create();
-
+        alertDialog.setCancelable(false);
         // Setting Dialog Title
         alertDialog.setTitle(title);
 

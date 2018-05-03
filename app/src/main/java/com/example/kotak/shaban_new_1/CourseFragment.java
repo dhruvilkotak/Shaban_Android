@@ -41,7 +41,7 @@ public class CourseFragment extends Fragment {
 
         // Setting Dialog Title
         alertDialog.setTitle(title);
-
+        alertDialog.setCancelable(false);
         // Setting Dialog Message
         alertDialog.setMessage(message);
 
