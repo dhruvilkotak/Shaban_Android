@@ -429,10 +429,6 @@ public class ChatActivity extends AppCompatActivity {
          messages.add(newMsg);
 
         writeToFile(username, newMsg);
-        /*Log.d("mess:",messages.size()+" inserted");
-        mMessageAdapter.notifyItemInserted(messages.size() - 1);
-        Log.d("Adapter:",mMessageAdapter.getItemCount()+" ");
-        scrollToBottom();*/
 
         mMessageAdapter.notifyItemInserted(messages.size() - 1);
         mMessageAdapter = new MessageListAdapter(ChatActivity.this, messages, nameOfUser);
@@ -491,10 +487,6 @@ public class ChatActivity extends AppCompatActivity {
         try {
             FileOutputStream fileOutputStream;
             OutputStreamWriter outputStreamWriter;
-          /*fileOutputStream = this.openFileOutput(file.getName(), Context.MODE_PRIVATE);
-            outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            outputStreamWriter.write(jsonToFile + '\n');
-            */
           if(file.exists()) {
                 Log.d("appen","yes");
                 fileOutputStream = ChatActivity.this.openFileOutput(file.getName(), Context.MODE_APPEND);
@@ -525,12 +517,7 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//            // Showing progress loading dialog
-//            progressDialog = new ProgressDialog(getActivity());
-//            progressDialog.setMessage("Loading all messages...");
-//            progressDialog.setCancelable(false);
-//            progressDialog.show();
-        }
+      }
 
         @Override
         protected Void doInBackground(Void... arg0) {
@@ -588,31 +575,10 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-
-            // Dismiss the progress dialog
-//            if (progressDialog.isShowing())
-//                progressDialog.dismiss();
-
         }
 
     }
 
-/*
-    public void orderingMessages()
-    {
-        for(int x = 0; x < messages.size() - 1; x++){
-            int min = x;
-            for(int y = x+1; y < messages.size(); y++){
-                if(messages.get(y).getId() < messages.get(min).getId()) {
-                    min = y;
-                }
-
-            }
-            Message temp = messages.get(x);
-            messages.set(x, messages.get(min));
-            messages.set(min, temp);
-        }
-    }*/
     @Override
     public void onDestroy() {
 
